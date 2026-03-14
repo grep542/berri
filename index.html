@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>berri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET & BASE ─────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+:root {
+  --rose:       #C8566E;
+  --rose-mid:   #A83C56;
+  --rose-glow:  rgba(200, 86, 110, 0.35);
+  --rose-soft:  rgba(200, 86, 110, 0.12);
+  --gold:       #BFA06A;
+  --gold-soft:  rgba(191, 160, 106, 0.15);
+  --ink:        #070407;
+  --ink2:       #110810;
+  --ink3:       #1c101a;
+  --white:      #ffffff;
+  --muted:      rgba(255,255,255,0.38);
+  --muted2:     rgba(255,255,255,0.18);
+  --border:     rgba(255,255,255,0.07);
+  --border-rose:rgba(200,86,110,0.28);
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--white);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+/* ─── SCREENS ──────────────────────────────────── */
+.screen { display: none; width: 100%; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ══════════════════════════════════════════════════
+   SPLASH
+══════════════════════════════════════════════════ */
+#splash {
+  min-height: 100svh;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: var(--ink);
+}
+.splash-canvas {
+  position: absolute; inset: 0; overflow: hidden;
+}
+/* layered light orbs */
+.orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(80px); opacity: 0;
+  animation: orbFloat 6s ease-in-out infinite;
+}
+.orb1 { width: 380px; height: 380px; background: radial-gradient(circle, rgba(180,60,90,0.55), transparent 65%); top: 10%; left: -10%; animation-delay: 0s; }
+.orb2 { width: 280px; height: 280px; background: radial-gradient(circle, rgba(160,80,120,0.4), transparent 65%); top: 40%; right: -5%; animation-delay: 1.5s; }
+.orb3 { width: 200px; height: 200px; background: radial-gradient(circle, rgba(191,160,106,0.3), transparent 65%); bottom: 20%; left: 20%; animation-delay: 3s; }
+@keyframes orbFloat {
+  0%   { opacity: 0; transform: scale(0.85) translateY(0); }
+  20%  { opacity: 1; }
+  50%  { transform: scale(1.05) translateY(-18px); }
+  80%  { opacity: 1; }
+  100% { opacity: 0.6; transform: scale(0.9) translateY(0); }
+}
+/* grain texture overlay */
+.grain {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  background-size: 180px;
+  opacity: 0.5;
+}
+/* thin decorative lines */
+.splash-lines {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1; opacity: 0.06;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.4) 39px, rgba(255,255,255,0.4) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.4) 39px, rgba(255,255,255,0.4) 40px);
+}
+.splash-content {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  animation: splashReveal 1s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes splashReveal {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.splash-wordmark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(72px, 20vw, 120px);
+  font-weight: 300; letter-spacing: 12px;
+  line-height: 1; color: var(--white);
+}
+.splash-wordmark em { color: var(--rose); font-style: normal; }
+.splash-rule {
+  width: 48px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rose), transparent);
+  margin: 20px auto;
+}
+.splash-tagline {
+  font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+  color: rgba(255,255,255,0.28); text-align: center;
+  font-weight: 300;
+}
+.splash-enter {
+  margin-top: 56px;
+  position: relative;
+  padding: 16px 52px; border-radius: 100px;
+  background: transparent;
+  border: 1px solid rgba(200,86,110,0.5);
+  font-size: 13px; font-weight: 400; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--white); transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
+  overflow: hidden;
+}
+.splash-enter::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--rose), var(--rose-mid));
+  opacity: 0; transition: opacity 0.35s;
+}
+.splash-enter:hover::before { opacity: 1; }
+.splash-enter:hover { border-color: transparent; transform: scale(1.03); }
+.splash-enter span { position: relative; z-index: 1; }
+.splash-version {
+  position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+  font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.12);
+  z-index: 2;
+}
+
+/* ══════════════════════════════════════════════════
+   ONBOARDING
+══════════════════════════════════════════════════ */
+#onboarding {
+  min-height: 100svh;
+  background: var(--ink);
+  overflow: hidden;
+  position: relative;
+}
+.ob-bg-accent {
+  position: absolute; width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(180,60,90,0.12), transparent 70%);
+  filter: blur(60px); top: -80px; right: -80px; pointer-events: none;
+}
+.ob-track {
+  display: flex;
+  transition: transform 0.5s cubic-bezier(0.32,0.72,0,1);
+  width: 300%; height: 100%;
+}
+.ob-slide {
+  width: 33.333%; min-height: 100svh;
+  padding: 56px 28px 44px;
+  display: flex; flex-direction: column;
+}
+/* progress dots */
+.ob-dots {
+  display: flex; gap: 8px; margin-bottom: 52px;
+}
+.ob-dot {
+  height: 2px; border-radius: 1px; flex: 1;
+  background: rgba(255,255,255,0.1);
+  transition: background 0.4s;
+}
+.ob-dot.active { background: var(--rose); }
+.ob-dot.done   { background: rgba(200,86,110,0.35); }
+.ob-step-label {
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--rose); margin-bottom: 14px; opacity: 0.75;
+}
+.ob-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(30px, 8vw, 40px); font-weight: 300; line-height: 1.15;
+  margin-bottom: 10px;
+}
+.ob-heading em { font-style: italic; color: var(--rose); }
+.ob-desc {
+  font-size: 13px; color: var(--muted); line-height: 1.7;
+  margin-bottom: 36px; max-width: 320px;
+}
+/* chips */
+.ob-chips { display: flex; flex-wrap: wrap; gap: 10px; flex: 1; align-content: flex-start; }
+.chip {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 11px 18px; border-radius: 100px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  font-size: 13px; font-weight: 300; color: rgba(255,255,255,0.6);
+  transition: all 0.22s cubic-bezier(0.22,1,0.36,1);
+  user-select: none;
+}
+.chip-icon {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.chip:hover {
+  border-color: var(--border-rose);
+  background: var(--rose-soft);
+  color: var(--white);
+  transform: translateY(-1px);
+}
+.chip.sel {
+  border-color: rgba(200,86,110,0.55);
+  background: rgba(200,86,110,0.14);
+  color: var(--white);
+}
+.chip.sel .chip-icon { background: rgba(200,86,110,0.25); }
+/* ob cta */
+.ob-cta-row { margin-top: 36px; display: flex; flex-direction: column; gap: 12px; }
+.btn-ob-next {
+  padding: 16px 28px; border-radius: 14px;
+  background: var(--rose);
+  font-size: 14px; font-weight: 400; letter-spacing: 0.5px;
+  color: var(--white); transition: all 0.25s;
+}
+.btn-ob-next:hover { background: var(--rose-mid); transform: translateY(-1px); }
+.btn-ob-skip {
+  font-size: 12px; color: rgba(255,255,255,0.22);
+  letter-spacing: 1px; text-align: center;
+  transition: color 0.2s;
+}
+.btn-ob-skip:hover { color: rgba(255,255,255,0.45); }
+
+/* ══════════════════════════════════════════════════
+   FEED
+══════════════════════════════════════════════════ */
+#feed-screen { background: var(--ink); }
+.feed-nav {
+  position: sticky; top: 0; z-index: 100;
+  padding: 18px 22px 14px;
+  background: linear-gradient(to bottom, rgba(7,4,7,0.92) 0%, transparent 100%);
+  display: flex; align-items: center; justify-content: space-between;
+  pointer-events: none;
+}
+.feed-wordmark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 300; letter-spacing: 4px;
+}
+.feed-wordmark em { color: var(--rose); font-style: normal; }
+.feed-for-you {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+}
+
+/* ── REEL CARD ─────────────────────────────────── */
+.reel {
+  width: 100%; height: 100svh; min-height: 600px;
+  position: relative; overflow: hidden;
+  scroll-snap-align: start;
+}
+
+/* sophisticated placeholder canvases */
+.reel-canvas {
+  position: absolute; inset: 0;
+}
+/* each card gets a unique layered gradient scene */
+.reel-canvas.c1 {
+  background:
+    radial-gradient(ellipse 120% 80% at 80% 20%, rgba(180,55,80,0.55) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 100% at 10% 90%, rgba(100,30,60,0.6) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 60% at 50% 50%, rgba(40,10,25,0.8) 0%, transparent 70%),
+    linear-gradient(160deg, #1a0810 0%, #0d0508 50%, #120610 100%);
+}
+.reel-canvas.c2 {
+  background:
+    radial-gradient(ellipse 100% 70% at 20% 15%, rgba(80,40,130,0.45) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 90% at 85% 85%, rgba(150,60,100,0.5) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 55% 45%, rgba(20,10,40,0.7) 0%, transparent 60%),
+    linear-gradient(200deg, #0d0818 0%, #0a050f 50%, #120610 100%);
+}
+.reel-canvas.c3 {
+  background:
+    radial-gradient(ellipse 90% 60% at 70% 30%, rgba(160,90,40,0.5) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 80% at 15% 75%, rgba(140,40,60,0.5) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 50% at 45% 55%, rgba(30,15,10,0.75) 0%, transparent 65%),
+    linear-gradient(150deg, #130908 0%, #0a0505 50%, #140a06 100%);
+}
+.reel-canvas.c4 {
+  background:
+    radial-gradient(ellipse 110% 65% at 30% 25%, rgba(50,100,130,0.35) 0%, transparent 55%),
+    radial-gradient(ellipse 75% 85% at 75% 80%, rgba(130,50,100,0.45) 0%, transparent 55%),
+    linear-gradient(170deg, #080d14 0%, #070509 50%, #0d0812 100%);
+}
+.reel-canvas.c5 {
+  background:
+    radial-gradient(ellipse 100% 70% at 60% 20%, rgba(170,70,90,0.5) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 80% at 20% 80%, rgba(191,160,106,0.2) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(100,30,60,0.45) 0%, transparent 55%),
+    linear-gradient(140deg, #120908 0%, #0a0507 50%, #110a08 100%);
+}
+.reel-canvas.c6 {
+  background:
+    radial-gradient(ellipse 80% 70% at 15% 30%, rgba(100,160,130,0.25) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 60% at 85% 70%, rgba(160,60,100,0.5) 0%, transparent 55%),
+    linear-gradient(185deg, #080e0c 0%, #060508 50%, #0e080c 100%);
+}
+
+/* geometric decorative shapes inside each card */
+.reel-geo {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+}
+.geo-circle {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.geo-line {
+  position: absolute; background: rgba(255,255,255,0.025);
+}
+/* card-specific geo layouts injected via classes */
+.c1 .geo-circle:nth-child(1) { width: 260px; height: 260px; top: 15%; right: -60px; }
+.c1 .geo-circle:nth-child(2) { width: 140px; height: 140px; bottom: 30%; left: 10%; border-color: rgba(200,86,110,0.1); }
+.c2 .geo-circle:nth-child(1) { width: 320px; height: 320px; top: 20%; left: -100px; }
+.c2 .geo-circle:nth-child(2) { width: 100px; height: 100px; bottom: 40%; right: 15%; border-color: rgba(200,86,110,0.1); }
+.c3 .geo-circle:nth-child(1) { width: 200px; height: 200px; top: 30%; right: 5%; border-color: rgba(191,160,106,0.1); }
+.c4 .geo-circle:nth-child(1) { width: 280px; height: 280px; bottom: 25%; left: -70px; }
+.c5 .geo-circle:nth-child(1) { width: 180px; height: 180px; top: 20%; left: 20%; border-color: rgba(200,86,110,0.08); }
+.c6 .geo-circle:nth-child(1) { width: 240px; height: 240px; top: 10%; right: -50px; }
+.geo-line { width: 1px; height: 40%; top: 20%; left: 35%; transform: rotate(22deg); }
+
+/* light leak streaks */
+.reel-leak {
+  position: absolute; pointer-events: none; overflow: hidden; inset: 0;
+}
+.leak-streak {
+  position: absolute;
+  width: 1px; opacity: 0.25;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.5), transparent);
+}
+.reel-canvas.c1 .leak-streak { height: 60%; top: 10%; left: 62%; transform: rotate(-12deg); }
+.reel-canvas.c2 .leak-streak { height: 50%; top: 20%; left: 30%; transform: rotate(8deg); }
+.reel-canvas.c3 .leak-streak { height: 70%; top: 5%; left: 72%; transform: rotate(-6deg); }
+.reel-canvas.c5 .leak-streak { height: 55%; top: 15%; left: 48%; transform: rotate(14deg); }
+
+/* grain overlay per card */
+.reel-grain {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.055'/%3E%3C/svg%3E");
+  background-size: 220px; opacity: 0.6; mix-blend-mode: overlay;
+}
+
+/* content depth gradient */
+.reel-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 35%, rgba(7,4,7,0.5) 100%);
+}
+.reel-bottom-grad {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(7,4,7,0.22) 0%,
+    transparent 28%,
+    transparent 42%,
+    rgba(7,4,7,0.55) 68%,
+    rgba(7,4,7,0.92) 88%,
+    rgba(7,4,7,0.99) 100%
+  );
+}
+
+/* reel progress bar */
+.reel-prog {
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: rgba(255,255,255,0.07); z-index: 5;
+}
+.reel-prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--rose), rgba(200,86,110,0.6));
+  width: 0%; transition: width 0.08s linear;
+}
+
+/* side action buttons */
+.reel-side {
+  position: absolute; right: 16px; bottom: 110px; z-index: 10;
+  display: flex; flex-direction: column; gap: 20px; align-items: center;
+}
+.sact {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.sact-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; backdrop-filter: blur(12px);
+  transition: all 0.22s;
+}
+.sact-btn:hover { background: var(--rose-soft); border-color: var(--border-rose); transform: scale(1.08); }
+.sact-lbl { font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 0.3px; }
+
+/* bottom content */
+.reel-foot {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 0 20px 28px; z-index: 10;
+}
+.reel-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px 4px 8px; border-radius: 100px;
+  background: rgba(200,86,110,0.15);
+  border: 1px solid rgba(200,86,110,0.25);
+  margin-bottom: 12px;
+}
+.badge-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--rose); }
+.badge-txt { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,180,195,0.8); }
+.reel-caption {
+  font-size: 15px; color: rgba(255,255,255,0.82); line-height: 1.55;
+  font-weight: 300; max-width: 260px; margin-bottom: 20px;
+}
+.reel-caption em { font-style: italic; color: rgba(255,200,210,0.7); }
+
+/* ─── PAYWALL ───────────────────────────────────── */
+.paywall-reel {
+  width: 100%; height: 100svh; min-height: 600px;
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--ink);
+  scroll-snap-align: start;
+}
+.pw-bg {
+  position: absolute; inset: 0; overflow: hidden;
+}
+.pw-bg-canvas {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(180,55,80,0.22) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 70% at 80% 100%, rgba(140,40,70,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 50% at 20% 55%, rgba(191,160,106,0.08) 0%, transparent 55%),
+    #07040a;
+}
+/* faint blurred ghost reels peek through behind paywall */
+.pw-ghost-grid {
+  position: absolute; inset: 0;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 2px; filter: blur(22px); opacity: 0.18;
+}
+.pw-ghost-cell {
+  background: var(--ink3);
+}
+.pw-ghost-cell:nth-child(1) { background: radial-gradient(circle at 40% 40%, rgba(170,60,90,0.6), #0d0508); }
+.pw-ghost-cell:nth-child(2) { background: radial-gradient(circle at 60% 60%, rgba(80,40,120,0.5), #080510); }
+.pw-ghost-cell:nth-child(3) { background: radial-gradient(circle at 30% 70%, rgba(100,160,120,0.3), #050a08); }
+.pw-ghost-cell:nth-child(4) { background: radial-gradient(circle at 70% 30%, rgba(191,160,106,0.35), #0a0806); }
+.pw-dark-veil {
+  position: absolute; inset: 0;
+  background: rgba(7,4,7,0.72);
+}
+/* the card */
+.pw-card {
+  position: relative; z-index: 5;
+  width: min(340px, 90%);
+  background: rgba(14,7,12,0.8);
+  border: 1px solid rgba(200,86,110,0.2);
+  border-radius: 28px;
+  padding: 40px 32px 36px;
+  backdrop-filter: blur(24px);
+  /* inner glow rim */
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.5),
+    0 40px 80px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(200,86,110,0.04);
+}
+.pw-eyebrow {
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--rose); opacity: 0.7; margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+.pw-eyebrow::before, .pw-eyebrow::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200,86,110,0.3), transparent);
+}
+.pw-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 34px; font-weight: 300; line-height: 1.15;
+  text-align: center; margin-bottom: 12px;
+}
+.pw-title em { font-style: italic; color: var(--rose); }
+.pw-sub {
+  font-size: 13px; color: var(--muted); line-height: 1.65;
+  text-align: center; margin-bottom: 28px;
+}
+/* price display */
+.pw-price-block {
+  display: flex; flex-direction: column; align-items: center;
+  margin-bottom: 28px; padding: 20px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 18px; gap: 4px;
+}
+.pw-price-row {
+  display: flex; align-items: baseline; gap: 4px;
+}
+.pw-currency { font-size: 18px; color: var(--muted); font-weight: 300; margin-top: 8px; }
+.pw-amount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 64px; font-weight: 300; line-height: 1; color: var(--white);
+}
+.pw-period { font-size: 13px; color: var(--muted); }
+.pw-price-note { font-size: 11px; color: rgba(255,255,255,0.2); letter-spacing: 1px; }
+/* perks */
+.pw-perks { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.pw-perk {
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.45;
+}
+.pw-perk-icon {
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+  background: rgba(200,86,110,0.12);
+  border: 1px solid rgba(200,86,110,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; margin-top: 1px;
+}
+/* CTA */
+.pw-cta {
+  width: 100%; padding: 17px 28px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--rose), var(--rose-mid));
+  font-size: 14px; font-weight: 500; letter-spacing: 0.5px;
+  color: var(--white); transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+  position: relative; overflow: hidden;
+}
+.pw-cta::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.pw-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(200,86,110,0.35); }
+.pw-cta:hover::after { opacity: 1; }
+.pw-anon {
+  text-align: center; margin-top: 14px;
+  font-size: 11px; color: rgba(255,255,255,0.18);
+  letter-spacing: 1px;
+}
+
+/* ─── TOAST ──────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 32px; left: 50%;
+  transform: translateX(-50%) translateY(64px);
+  background: rgba(20,10,16,0.95);
+  border: 1px solid rgba(200,86,110,0.25);
+  color: var(--white); padding: 12px 24px;
+  border-radius: 100px; font-size: 13px;
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+  z-index: 9999; white-space: nowrap;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ══ SPLASH ══════════════════════════════════ -->
+<div id="splash" class="screen active">
+  <div class="splash-canvas">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+    <div class="grain"></div>
+    <div class="splash-lines"></div>
+  </div>
+  <div class="splash-content">
+    <div class="splash-wordmark">b<em>e</em>rri</div>
+    <div class="splash-rule"></div>
+    <div class="splash-tagline">your world &nbsp;·&nbsp; their desire</div>
+    <button class="splash-enter" onclick="goOnboarding()"><span>enter &nbsp;✦</span></button>
+  </div>
+  <div class="splash-version">berri · preview</div>
+</div>
+
+<!-- ══ ONBOARDING ══════════════════════════════ -->
+<div id="onboarding" class="screen">
+  <div class="ob-bg-accent"></div>
+  <div class="ob-track" id="ob-track">
+
+    <!-- Step 1: Vibe -->
+    <div class="ob-slide">
+      <div class="ob-dots">
+        <div class="ob-dot active" id="od0"></div>
+        <div class="ob-dot" id="od1"></div>
+        <div class="ob-dot" id="od2"></div>
+      </div>
+      <div class="ob-step-label">step 1 of 3</div>
+      <div class="ob-heading">what kind of <em>energy</em><br>draws you in?</div>
+      <div class="ob-desc">We tune your feed to match. No names, no profiles — just the feeling.</div>
+      <div class="ob-chips">
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🌸</div>soft &amp; romantic</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🔥</div>bold &amp; confident</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🌙</div>mysterious</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🫧</div>playful &amp; teasing</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🖤</div>dark &amp; edgy</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">✨</div>glamorous</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🍃</div>natural &amp; raw</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🎀</div>cute &amp; adorable</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🕯️</div>sensual &amp; slow</div>
+      </div>
+      <div class="ob-cta-row">
+        <button class="btn-ob-next" onclick="nextStep(1)">continue</button>
+        <button class="btn-ob-skip" onclick="goFeed()">skip onboarding &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Physique -->
+    <div class="ob-slide">
+      <div class="ob-dots">
+        <div class="ob-dot done"></div>
+        <div class="ob-dot active"></div>
+        <div class="ob-dot"></div>
+      </div>
+      <div class="ob-step-label">step 2 of 3</div>
+      <div class="ob-heading">what <em>physique</em><br>do you love?</div>
+      <div class="ob-desc">Your preference shapes what rises to the top. Select all that apply.</div>
+      <div class="ob-chips">
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🌺</div>petite</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🍑</div>curvy</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">💪</div>athletic &amp; toned</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🌹</div>slim</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🔮</div>plus &amp; soft</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🌊</div>tall &amp; lean</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🍓</div>hourglass</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🫶</div>love them all</div>
+      </div>
+      <div class="ob-cta-row">
+        <button class="btn-ob-next" onclick="nextStep(2)">continue</button>
+        <button class="btn-ob-skip" onclick="goFeed()">skip &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Content type -->
+    <div class="ob-slide">
+      <div class="ob-dots">
+        <div class="ob-dot done"></div>
+        <div class="ob-dot done"></div>
+        <div class="ob-dot active"></div>
+      </div>
+      <div class="ob-step-label">step 3 of 3</div>
+      <div class="ob-heading">what <em>content</em><br>excites you most?</div>
+      <div class="ob-desc">Completely private. Your feed is built just for you.</div>
+      <div class="ob-chips">
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">📸</div>photos &amp; lifestyle</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🎬</div>reels &amp; videos</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">💌</div>intimate moments</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🛁</div>boudoir</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🎭</div>roleplay &amp; fantasy</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🕯️</div>sensual &amp; slow</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🌶️</div>spicy &amp; explicit</div>
+        <div class="chip" onclick="toggle(this)"><div class="chip-icon">🎀</div>teasing &amp; cute</div>
+      </div>
+      <div class="ob-cta-row">
+        <button class="btn-ob-next" onclick="goFeed()">enter my feed ✦</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ FEED ════════════════════════════════════ -->
+<div id="feed-screen" class="screen">
+  <div class="feed-nav">
+    <div></div>
+    <div class="feed-wordmark">b<em>e</em>rri</div>
+    <div class="feed-for-you">for you</div>
+  </div>
+
+  <div id="reel-list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── state ── */
+let obCurrent = 0;
+
+/* ── screen nav ── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const el = document.getElementById(id);
+  el.style.display = 'flex';
+  el.classList.add('active');
+}
+
+function goOnboarding() { showScreen('onboarding'); }
+
+function nextStep(to) {
+  obCurrent = to;
+  document.getElementById('ob-track').style.transform = `translateX(-${to * 33.333}%)`;
+}
+
+function goFeed() {
+  showScreen('feed-screen');
+  buildFeed();
+}
+
+/* ── chip toggle ── */
+function toggle(el) { el.classList.toggle('sel'); }
+
+/* ── reel data ── */
+const reels = [
+  { canvas: 'c1', badge: 'soft & romantic', caption: 'the morning light was different today <em>✦</em>', likes: '12.4k', saves: '3.1k' },
+  { canvas: 'c2', badge: 'mysterious',       caption: 'some things are better felt in the dark <em>✦</em>', likes: '9.8k', saves: '2.7k' },
+  { canvas: 'c3', badge: 'bold & confident', caption: 'ripe, ready, and here for every bit of it', likes: '24.1k', saves: '8.2k' },
+];
+
+/* ── build feed ── */
+function buildFeed() {
+  const list = document.getElementById('reel-list');
+  list.innerHTML = '';
+
+  reels.forEach((r, i) => {
+    const div = document.createElement('div');
+    div.className = 'reel';
+    div.id = 'r' + i;
+    div.innerHTML = `
+      <div class="reel-canvas ${r.canvas}">
+        <div class="reel-geo">
+          <div class="geo-circle"></div>
+          <div class="geo-circle"></div>
+          <div class="geo-line"></div>
+        </div>
+        <div class="leak-streak"></div>
+      </div>
+      <div class="reel-grain"></div>
+      <div class="reel-vignette"></div>
+      <div class="reel-bottom-grad"></div>
+      <div class="reel-prog"><div class="reel-prog-fill" id="pf${i}"></div></div>
+      <div class="reel-side">
+        <div class="sact">
+          <button class="sact-btn" id="lb${i}" onclick="doLike(${i})">♡</button>
+          <div class="sact-lbl" id="lc${i}">${r.likes}</div>
+        </div>
+        <div class="sact">
+          <button class="sact-btn" id="sb${i}" onclick="doSave(${i})">✦</button>
+          <div class="sact-lbl">${r.saves}</div>
+        </div>
+      </div>
+      <div class="reel-foot">
+        <div class="reel-badge"><div class="badge-dot"></div><div class="badge-txt">${r.badge}</div></div>
+        <div class="reel-caption">${r.caption}</div>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+
+  /* paywall card */
+  const pw = document.createElement('div');
+  pw.className = 'paywall-reel';
+  pw.id = 'paywall';
+  pw.innerHTML = `
+    <div class="pw-bg">
+      <div class="pw-bg-canvas"></div>
+      <div class="pw-ghost-grid">
+        <div class="pw-ghost-cell"></div>
+        <div class="pw-ghost-cell"></div>
+        <div class="pw-ghost-cell"></div>
+        <div class="pw-ghost-cell"></div>
+      </div>
+      <div class="pw-dark-veil"></div>
+    </div>
+    <div class="pw-card">
+      <div class="pw-eyebrow">unlock berri</div>
+      <div class="pw-title">the rest is <em>yours</em><br>to keep</div>
+      <div class="pw-sub">Three reels is just the surface. Subscribe once and the whole feed opens — no limits, no identity required.</div>
+      <div class="pw-price-block">
+        <div class="pw-price-row">
+          <div class="pw-currency">£</div>
+          <div class="pw-amount">9</div>
+          <div class="pw-period">/month</div>
+        </div>
+        <div class="pw-price-note">cancel anytime &nbsp;·&nbsp; no contract</div>
+      </div>
+      <div class="pw-perks">
+        <div class="pw-perk"><div class="pw-perk-icon">∞</div>Unlimited scroll — new drops every day</div>
+        <div class="pw-perk"><div class="pw-perk-icon">🎯</div>Feed curated to your taste from setup</div>
+        <div class="pw-perk"><div class="pw-perk-icon">👁</div>Zero creator names or identities shown</div>
+        <div class="pw-perk"><div class="pw-perk-icon">🔒</div>Fully anonymous — no email, no account</div>
+      </div>
+      <button class="pw-cta" onclick="doSubscribe()">unlock for £9 / month ✦</button>
+      <div class="pw-anon">just a card &nbsp;·&nbsp; nothing else</div>
+    </div>
+  `;
+  list.appendChild(pw);
+
+  initProgress();
+}
+
+/* ── progress bars ── */
+const timers = {};
+function initProgress() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      const id = e.target.id;
+      if (!id || !id.startsWith('r')) return;
+      const i = parseInt(id.replace('r', ''));
+      if (isNaN(i)) return;
+      if (e.isIntersecting) {
+        let p = 0;
+        clearInterval(timers[i]);
+        const bar = document.getElementById('pf' + i);
+        if (!bar) return;
+        timers[i] = setInterval(() => {
+          p += 0.32;
+          bar.style.width = Math.min(p, 100) + '%';
+          if (p >= 100) clearInterval(timers[i]);
+        }, 80);
+      } else {
+        clearInterval(timers[i]);
+      }
+    });
+  }, { threshold: 0.6 });
+
+  document.querySelectorAll('.reel[id^="r"]').forEach(r => obs.observe(r));
+}
+
+/* ── interactions ── */
+const liked = {}, saved = {};
+function doLike(i) {
+  liked[i] = !liked[i];
+  const btn = document.getElementById('lb' + i);
+  btn.textContent = liked[i] ? '♥' : '♡';
+  btn.style.color = liked[i] ? '#C8566E' : '';
+  btn.style.background = liked[i] ? 'rgba(200,86,110,0.2)' : '';
+  btn.style.borderColor = liked[i] ? 'rgba(200,86,110,0.4)' : '';
+}
+function doSave(i) {
+  saved[i] = !saved[i];
+  const btn = document.getElementById('sb' + i);
+  btn.style.color = saved[i] ? '#BFA06A' : '';
+  btn.style.background = saved[i] ? 'rgba(191,160,106,0.15)' : '';
+  btn.style.borderColor = saved[i] ? 'rgba(191,160,106,0.3)' : '';
+  showToast(saved[i] ? 'saved to your collection ✦' : 'removed from collection');
+}
+function doSubscribe() {
+  showToast('payment gateway coming soon · £9/mo · anonymous ✦');
+}
+
+/* ── toast ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ── init ── */
+document.getElementById('onboarding').style.display = 'none';
+document.getElementById('feed-screen').style.display = 'none';
+</script>
+</body>
+</html>
